@@ -29,4 +29,15 @@ func main() {
 	//4
 	slices2 = append(slices2, slices1...)
 	fmt.Println("slices2", slices2)
+
+	//5
+	var a = [...]int{0, 1, 2, 3, 4, 5, 6, 7}
+	var s = make([]int, 6)
+	n1 := copy(s, a[0:])
+	fmt.Println("n1", n1)
+	fmt.Println("s", s)
+
+	n2 := copy(s, s[2:])
+	fmt.Println("n2", n2)
+	fmt.Println("s", s)
 }
