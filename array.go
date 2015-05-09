@@ -47,8 +47,16 @@ func main() {
 	modify_val(array1)
 	fmt.Println("modify_val array1", array1)
 
+	slices := array1[0:5]
+	slices = append(slices, 7, 8, 9, 10, 11, 12)
+	fmt.Println("slices", slices)
+
 	//5
-	array2 := []int{1, 2, 3, 4, 5}
-	modify_ref(array2)
-	fmt.Println("modify_ref array2", array2)
+	slices1 := []int{1, 2, 3, 4, 5}
+	modify_ref(slices1)
+	fmt.Println("modify_ref slices1", slices1)
+
+	slices1 = append(slices1, 7, 8, 9, 10)
+	fmt.Println("slices1", slices1)
+
 }
