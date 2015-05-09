@@ -4,6 +4,18 @@ import (
 	"fmt"
 )
 
+///////////////// multi return values
+func MultiReturnTest(v1 int, v2 int) (min int, max int) {
+	if v1 <= v2 {
+		min = v1
+		max = v2
+		return
+	}
+	min = v2
+	max = v1
+	return
+}
+
 /////////////////
 type Test struct {
 	l   int
@@ -39,6 +51,12 @@ func callback(val int, fun Func) {
 }
 
 func main() {
+	min, max := MultiReturnTest(4, 5)
+	fmt.Printf("min=%d\tmax=%d\n", min, max)
+
+	min, max = MultiReturnTest(5, 4)
+	fmt.Printf("min=%d\tmax=%d\n", min, max)
+
 	t := new(Test) // eq  var t Test
 	if !t.InitTest(5, 1, 2, 3, 4, 5) {
 		fmt.Println("t.InitTest failed")
