@@ -4,6 +4,16 @@ import (
 	"fmt"
 )
 
+//数组作为参数时的值传递
+func modify_val(array [5]int) {
+	array[0] = 10
+}
+
+//数组作为参数时的引用传递
+func modify_ref(array []int) {
+	array[0] = 10
+}
+
 func main() {
 	//1
 	var arr [100]int
@@ -31,4 +41,14 @@ func main() {
 	for i := 0; i < 3; i++ {
 		println(arr4[i])
 	}
+
+	//4
+	array1 := [5]int{1, 2, 3, 4, 5}
+	modify_val(array1)
+	fmt.Println("modify_val array1", array1)
+
+	//5
+	array2 := []int{1, 2, 3, 4, 5}
+	modify_ref(array2)
+	fmt.Println("modify_ref array2", array2)
 }
