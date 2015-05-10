@@ -1,2 +1,3 @@
 all:
-	go build *.go
+	go build interface.go
+	go build sort_interface.go
