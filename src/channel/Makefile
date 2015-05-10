@@ -1,7 +1,6 @@
-tag:= channel
+gcflag:=-gcflags "-N -l"
 all:
-	go build  -gcflags "-N -l" -o $(tag) 
+	go build $(gcflag) -o channel 
 
 clean:
-	@rm -rf $(tag) 
-
+	@rm -rf channel
