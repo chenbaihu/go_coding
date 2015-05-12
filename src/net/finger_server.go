@@ -46,9 +46,9 @@ func getUserInfo(usr string) ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-	data, err := ioutil.ReadFile(u.HomeDir + ".plan")
+	data, err := ioutil.ReadFile(u.HomeDir + "/" + ".plan")
 	if err != nil {
-		return data, errors.New("User doesn't have a .plan file ! \n")
+		return data, errors.New(u.HomeDir + "User doesn't have a .plan file ! \n")
 	}
 	return data, nil
 }
