@@ -1,4 +1,4 @@
-package stat
+package status
 
 import (
 	"bufio"
@@ -32,6 +32,7 @@ func (ts *TimerStatus) SetTimerDump(duration time.Duration, f func()) {
 		ts.mutex.Lock()
 		ts.tsRecodes = make(map[string]*tsRecode)
 		ts.mutex.Unlock()
+		ts.timer.Reset(duration)
 	})
 }
 

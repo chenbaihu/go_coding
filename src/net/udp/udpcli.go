@@ -31,6 +31,7 @@ func initFlag() {
 	flag.Parse()
 }
 
+// like ./udpcli -hostPort=127.0.0.1:1053 -reqNum=100000
 func main() {
 	initFlag()
 
@@ -57,9 +58,9 @@ func makeData(body []byte) []byte {
 
 	//0a 01 01 20 00 ee 00 01  00 00 6d 64
 	_ = binary.Write(c32byte, binary.BigEndian, c32)
-	cheader := []byte{0x00, 0x56, 0x00, 0x00}
+	cheader := []byte{0x00, 0x00, 0x00}
 	cheader = append(cheader, c32byte.Bytes()[:]...)
-	cheader = append(cheader, byte(0x00))
+	cheader = append(cheader, byte(0x00), byte(0x00), byte(0x00), byte(0x00))
 	cheader = append(cheader, body[:]...)
 
 	return cheader
@@ -82,8 +83,7 @@ func request(wg *sync.WaitGroup, ts *status.TimerStatus) {
 	}
 	defer socket.Close()
 
-	//data_tmp := "bWQ1cz0wMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAxMQkxMDI0CWM6XHRlc3QJMAlkbnM6MC4wLjAuMAoNCnByb2R1Y3Q9aW50ZXJuYWwNCmNvbWJvPWludGVybmFsDQpzcHJvZHVjdD1pbnRlcm5hbA0Kc2NvbWJvPWludGVybmFsDQptaWQ9NDIzMDUyODViZTA3N2E3YjU0ZGMwMTZhOTg4NTQxMWENCmV4dD1leHQ6MSx0ZXN0X2NoZW5iYWlodXx8DQpvc3Zlcj01LjEuMjYwMC4yNTYuMS4zDQp2az0wODIzYTUxNA0K"
-	data_tmp := "hello server"
+	data_tmp := "hello udp server"
 	data_str, err := base64.StdEncoding.DecodeString(data_tmp)
 	msg := make([]byte, len(data_str))
 	msg = []byte(data_str)
