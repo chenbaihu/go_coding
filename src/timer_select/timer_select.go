@@ -14,10 +14,6 @@ func after() {
 	fmt.Println("after")
 }
 
-func afterFunc() {
-	fmt.Println("afterFunc")
-}
-
 func main() {
 	// 虽然goroutine 是并发执行的，但是它们并不是并行运行的。如果不告诉Go 额外的东西，同一时刻只会有一个goroutine 执行。
 	// 利用runtime.GOMAXPROCS(n) 可以设置goroutine 并行执行的数量。
@@ -27,11 +23,12 @@ func main() {
 
 	t1 := time.Tick(1 * time.Second)
 	t2 := time.After(5 * time.Second)
-	t3 := time.AfterFunc(5*time.Second, afterFunc)
 
-	if t3 != nil {
-		fmt.Printf("t3 timer start\n")
-	}
+	t3 := new(time.Timer)
+	t3 = time.AfterFunc(5*time.Second, func() {
+		fmt.Println("afterFunc")
+		t3.Reset((time.Duration)(5 * time.Second))
+	})
 
 	for {
 		select {
