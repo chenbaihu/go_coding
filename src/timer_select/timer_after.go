@@ -6,12 +6,8 @@ import (
 	"time"
 )
 
-func tick() {
-	fmt.Println("tick")
-}
-
-func after() {
-	fmt.Println("after")
+func runAfter() {
+	fmt.Println("run After")
 }
 
 func main() {
@@ -21,17 +17,11 @@ func main() {
 	// 当调度得到改进后，这将被移除。
 	runtime.GOMAXPROCS(5)
 
-	t1 := time.Tick(1 * time.Second)
-	t2 := time.After(5 * time.Second)
+	timer := new(time.Timer)
+	timer = time.AfterFunc(1*time.Second, func() {
+		runAfter()
+		timer.Reset((time.Duration)(1 * time.Second))
+	})
 
-	for {
-		select {
-		case <-t1:
-			tick()
-			break
-		case <-t2:
-			after()
-			break
-		}
-	}
+	time.Sleep(time.Hour)
 }
