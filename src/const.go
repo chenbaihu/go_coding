@@ -6,7 +6,7 @@ import (
 
 func main() {
 	const (
-		kOK = iota
+		kOK = iota   // ENUM
 		kERR
 		kFAIL
 	)
