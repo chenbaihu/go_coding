@@ -3,6 +3,8 @@
 
 char* MySecret();
 
+void HelloWorld(const char* str);
+
 #endif
 
 

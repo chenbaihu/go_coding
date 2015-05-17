@@ -1,5 +1,11 @@
 package main
 
+// #include <stdlib.h>
+// #include <stdio.h>
+// #include <unistd.h>
+// #include <stdint.h>
+// #include <sys/types.h>
+// #include <time.h>
 // typedef int (*intFunc) ();
 //
 // int
@@ -13,28 +19,44 @@ package main
 //	    return 42;
 // }
 import "C"
-import "fmt"
+
+import (
+	"./fun"
+	"fmt"
+	"os"
+	"time"
+)
 
 // http://golang.org/cmd/cgo/
+// http://blog.sina.com.cn/s/blog_538d55be01015h6g.html
 
-func main() {
-	f := C.intFunc(C.fortytwo)
-	fmt.Println(int(C.bridge_int_func(f)))
-	// Output: 42
+func random() uint32 {
+	t := new(C.time_t)
+	*t = C.time(t)
+	C.srandom(C.uint(*t))
+	//C.srand(C.uint(*t))
+
+	for {
+		fmt.Printf("This is from C:%d\n", C.random())
+		time.Sleep(5 * time.Second)
+	}
 }
 
-// Go string to C string
-// The C string is allocated in the C heap using malloc.
-// It is the caller's responsibility to arrange for it to be
-// freed, such as by calling C.free (be sure to include stdlib.h
-// if C.free is needed).
-//func C.CString(string) *C.char
+func main() {
+	fmt.Printf("This is from C:%s\n", fun.MySecret())
+	go func() {
+		for {
+			str := "hello world go string"
+			fun.HelloWorld(str)
+			time.Sleep(5 * time.Second)
+		}
+	}()
 
-// C string to Go string
-//func C.GoString(*C.char) string
+	go random()
 
-// C string, length to Go string
-//func C.GoStringN(*C.char, C.int) string
+	f := C.intFunc(C.fortytwo)
+	fmt.Println(int(C.bridge_int_func(f)))
 
-// C pointer, length to Go []byte
-//func C.GoBytes(unsafe.Pointer, C.int) []byte
+	time.Sleep(time.Hour)
+	os.Exit(0)
+}
