@@ -22,8 +22,10 @@ import "C"
 
 import (
 	"./fun"
+	"./log"
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 )
 
@@ -56,6 +58,17 @@ func main() {
 
 	f := C.intFunc(C.fortytwo)
 	fmt.Println(int(C.bridge_int_func(f)))
+
+	logName := "mylog.mylog_test"
+	mylog := log.NewMyLog(logName)
+	defer log.CloseMyLog(mylog)
+
+	md5 := "b03c700c5241bc2ec49578ab19b3355f"
+	num := 123456
+	cv := "win1359"
+
+	_, filename, line, _ := runtime.Caller(0)
+	mylog.LogDebug(logName, filename, line, "%s\t%d\t%s", md5, num, cv)
 
 	time.Sleep(time.Hour)
 	os.Exit(0)
