@@ -1,4 +1,4 @@
-package qutil
+package httpclient
 
 import (
 	"fmt"
