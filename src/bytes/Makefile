@@ -1,7 +1,7 @@
 gcflag := -gcflags "-N -l"
 all:
-	go build  $(gcflag) bytes.go 
+	go build  $(gcflag) bytesBuffer.go 
 
 clean:
-	@rm -rf bytes 
+	@rm -rf bytesBuffer 
 
