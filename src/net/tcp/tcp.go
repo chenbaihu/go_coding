@@ -6,7 +6,7 @@ import (
 	//"io/ioutil"
 	"net"
 	//"strings"
-	"encoding/base64"
+	//"encoding/base64"
 	"flag"
 	"goapp/lcsdispatcher/stat"
 	"sync"
@@ -82,11 +82,12 @@ func tcpTest(wg *sync.WaitGroup, timerStatHelper *stat.StatHelper) {
 			}
 			if bytes.Compare(reqData, rspData) == 0 {
 				timerStatHelper.AddCount("tcpreqsucc")
-				fmt.Printf("tcp req succ\treqData=%s\trspData=%s\n", base64.StdEncoding.EncodeToString(reqData), base64.StdEncoding.EncodeToString(rspData))
+				//fmt.Printf("tcp req succ\treqData=%s\trspData=%s\n", base64.StdEncoding.EncodeToString(reqData), base64.StdEncoding.EncodeToString(rspData))
 			} else {
 				timerStatHelper.AddCount("tcpreqfail2")
 			}
 		}
+		tcpCli.Close()
 	}
 }
 
@@ -117,6 +118,8 @@ var hasSendNum int64
 func main() {
 	initFlag()
 	hasSendNum = 0
+
+	runtime.GOMAXPROCS(5)
 
 	timerStatHelper := stat.NewStatHelper()
 	timerStatHelper.SetTimerDump(time.Duration(duration)*time.Second, func() {

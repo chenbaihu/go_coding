@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"runtime"
 	//"strings"
 	//"encoding/base64"
 	"flag"
@@ -35,7 +34,7 @@ func createHttpCli(timeout time.Duration) *http.Client {
 	return httpCli
 }
 
-func createHttpReq(url string, data []byte) (*http.Request, error) {
+func HTTPPost(httpCli *http.Client, url string, data []byte) ([]byte, error) {
 	r, err := http.NewRequest("POST", url, bytes.NewReader(data))
 	if err != nil {
 		return nil, err
@@ -43,17 +42,14 @@ func createHttpReq(url string, data []byte) (*http.Request, error) {
 
 	r.Header.Set("Content-Type", "application/octet-stream")
 	r.Header.Set("User-Agent", "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)")
-	if keepAlive {
+	if !keepAlive {
+		r.Header.Set("Connection", "close")
+	} else {
 		r.Header.Set("Connection", "keep-alive")
 		r.Header.Set("keep-alive", "timeout=2000")
-	} else {
-		r.Header.Set("Connection", "close")
 	}
-	return r, err
-}
 
-func HTTPPost(httpCli *http.Client, httpReq *http.Request) ([]byte, error) {
-	resp, err := httpCli.Do(httpReq)
+	resp, err := httpCli.Do(r)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +63,7 @@ func HTTPPost(httpCli *http.Client, httpReq *http.Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return d, nil
 }
 
@@ -88,13 +85,12 @@ func httpPostTest(wg *sync.WaitGroup, timerStatHelper *stat.StatHelper) {
 		}
 
 		httpCli := createHttpCli(time.Duration(timeoutMs) * time.Millisecond)
-		httpReq, _ := createHttpReq(url, reqData)
 		for j := 0; j < reqNumPerConn; j++ {
 			atomic.AddInt64(&hasSendNum, 1)
 
 			timerStatHelper.AddCount("httppost")
 			t := time.Now()
-			rspData, err := HTTPPost(httpCli, httpReq)
+			rspData, err := HTTPPost(httpCli, url, reqData)
 			timerStatHelper.AddTimeStat("onetrip", time.Since(t))
 			if err != nil {
 				//fmt.Println("HttpPost faile:", err)
@@ -126,7 +122,7 @@ var hasSendNum int64
 func initFlag() {
 	flag.Int64Var(&reqNum, "reqNum", 0, "Number of requests to perform, 0 mean not limit")
 	flag.IntVar(&reqNumPerConn, "reqNumPerConn", 1, "req num per connect")
-	flag.StringVar(&url, "url", "http://build17.kill.corp.qihoo.net:8080/cloudquery.php", "http server url address")
+	flag.StringVar(&url, "url", "http://testserverhost:8080/echo.php", "http server url address")
 	flag.IntVar(&timeoutMs, "timeoutMs", 500, "The timeout MS")
 	flag.IntVar(&duration, "d", 1, "The duration of dump stat info")
 	flag.IntVar(&concurrence, "c", 1, "concurrence")
@@ -139,8 +135,6 @@ func initFlag() {
 func main() {
 	initFlag()
 	hasSendNum = 0
-
-	runtime.GOMAXPROCS(24)
 
 	timerStatHelper := stat.NewStatHelper()
 	timerStatHelper.SetTimerDump(time.Duration(duration)*time.Second, func() {
