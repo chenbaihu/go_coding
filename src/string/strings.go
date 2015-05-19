@@ -5,13 +5,20 @@ import (
 	"strings"
 )
 
-func MapTestFun(r rune) rune {
-	if r == "||" {
-		return "|"
-	}
+//func MapTestFun(r []rune) []rune {
+//	if r == []rune("||") {
+//		return []rune("|")
+//	}
+//
+//	if r == []rune("/") {
+//		return []rune("|")
+//	}
+//	return r
+//}
 
-	if r == "/" {
-		return "|"
+func MapTestFun(r rune) rune {
+	if r == rune('/') {
+		return rune('|')
 	}
 	return r
 }
