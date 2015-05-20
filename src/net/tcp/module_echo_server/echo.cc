@@ -34,9 +34,23 @@ void EchoServer::onMessage(const muduo::net::TcpConnectionPtr& conn,
                            muduo::net::Buffer* buf,
                            muduo::Timestamp time)
 {
-  muduo::string msg(buf->retrieveAllAsString());
-  LOG_INFO << conn->name() << " echo " << msg.size() << " bytes, "
-           << "data received at " << time.toString();
-  conn->send(msg);
+  const static uint32_t head_len = 4;
+  while (buf->readableBytes()>head_len) { 
+      const char* data = buf->peek();
+      uint32_t len = ntohl(*(uint32_t*)(data));
+     
+      if (buf->readableBytes() >= (uint32_t)(head_len + len)) {
+          muduo::string msg(data, head_len + len);
+          LOG_INFO << conn->name() << " echo " << msg.size() << " bytes, " << "data received at " << time.toString(); 
+          buf->retrieve(head_len + len);
+          conn->send(msg);
+      } else {
+          LOG_INFO << conn->name() << " echo len=" << len << "\treadAbleBytes=" << buf->readableBytes(); 
+      }
+  }
+  //muduo::string msg(buf->retrieveAllAsString());
+  //LOG_INFO << conn->name() << " echo " << msg.size() << " bytes, "
+  //         << "data received at " << time.toString();
+  //conn->send(msg);
 }
 

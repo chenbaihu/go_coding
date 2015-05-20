@@ -7,15 +7,17 @@ import (
 	"net"
 	//"strings"
 	//"encoding/base64"
+	"encoding/binary"
 	"flag"
 	"goapp/lcsdispatcher/stat"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
 func createTcpCli(timeout time.Duration, tcpaddr string) (net.Conn, error) {
-	fmt.Println("createTcpCli timeout ", timeout)
+	//fmt.Println("createTcpCli timeout ", timeout)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", tcpaddr)
 	if err != nil {
 		return nil, err
@@ -36,28 +38,55 @@ func tcpSendRecv(conn net.Conn, data []byte, timeout time.Duration) ([]byte, err
 		return nil, err
 	}
 
-	buf := make([]byte, 1024)
-	lenght, err := conn.Read(buf)
+	head := make([]byte, 4)
+	_, err = conn.Read(head)
 	if err != nil {
-		fmt.Println("conn Read ", err.Error())
+		fmt.Println("conn Read Head", err.Error())
 		conn.Close()
 		return nil, err
 	}
-	fmt.Println(string(buf[0:lenght]))
-	return buf, nil
+
+	dRecvLen := 0
+	binary.Read(bytes.NewBuffer(head), binary.LittleEndian, dRecvLen)
+
+	body := make([]byte, dRecvLen)
+	rTotalLen := 0
+	for rTotalLen < dRecvLen {
+		rLen, err := conn.Read(body[rTotalLen:])
+		if err != nil {
+			fmt.Println("conn Read Body", err.Error())
+			conn.Close()
+			return nil, err
+		}
+		rTotalLen += rLen
+	}
+	fmt.Println(string(body[0:dRecvLen]))
+	return body, nil
 }
 
 func makeReqData() []byte {
-	data := bytes.NewBufferString("")
+	body := bytes.NewBufferString("")
 	for i := 0; i < dataLen; i++ {
-		data.WriteByte(byte(i))
+		body.WriteByte(byte(i))
 	}
-	return data.Bytes()
+
+	head := bytes.NewBufferString("")
+	//err := binary.Write(head, binary.BigEndian, dataLen)
+	_ = binary.Write(head, binary.BigEndian, (uint32)(dataLen))
+
+	data := append(head.Bytes(), body.Bytes()[:]...)
+	return data
+
+	//data := bytes.NewBufferString("")
+	//data.WriteString(head.String())
+	//data.WriteString(body.String())
+	//return data.Bytes()
 }
 
 func tcpTest(wg *sync.WaitGroup, timerStatHelper *stat.StatHelper) {
 	defer wg.Done()
 	reqData := makeReqData()
+	//fmt.Printf("tcp reqData=%s\n", base64.StdEncoding.EncodeToString(reqData))
 	for {
 		if (reqNum != 0) && (atomic.LoadInt64(&hasSendNum) > reqNum) {
 			//finish
@@ -82,7 +111,7 @@ func tcpTest(wg *sync.WaitGroup, timerStatHelper *stat.StatHelper) {
 			}
 			if bytes.Compare(reqData, rspData) == 0 {
 				timerStatHelper.AddCount("tcpreqsucc")
-				//fmt.Printf("tcp req succ\treqData=%s\trspData=%s\n", base64.StdEncoding.EncodeToString(reqData), base64.StdEncoding.EncodeToString(rspData))
+				//fmt.Printf("tcp rspData=%s\n", base64.StdEncoding.EncodeToString(rspData))
 			} else {
 				timerStatHelper.AddCount("tcpreqfail2")
 			}
@@ -119,7 +148,7 @@ func main() {
 	initFlag()
 	hasSendNum = 0
 
-	runtime.GOMAXPROCS(5)
+	runtime.GOMAXPROCS(24)
 
 	timerStatHelper := stat.NewStatHelper()
 	timerStatHelper.SetTimerDump(time.Duration(duration)*time.Second, func() {
