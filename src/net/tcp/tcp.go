@@ -30,17 +30,16 @@ func createTcpCli(timeout time.Duration, tcpaddr string) (net.Conn, error) {
 }
 
 func tcpSendRecv(conn net.Conn, data []byte, timeout time.Duration) ([]byte, error) {
-	sTotalLen := dataLen
-	for sTotalLen > 0 {
-		lens, err := conn.Write(data)
-		fmt.Println(lens)
+	totalLens := 0
+	for totalLens < dataLen {
+		lens, err := conn.Write(data[totalLens:])
 		if err != nil {
 			fmt.Println("conn Write ", err.Error())
 			//conn.Close()
-			//return nil, err
-			continue
+			return nil, err
+			//continue
 		}
-		sTotalLen -= lens
+		totalLens += lens
 	}
 
 	head := make([]byte, 4)
@@ -51,23 +50,29 @@ func tcpSendRecv(conn net.Conn, data []byte, timeout time.Duration) ([]byte, err
 		return nil, err
 	}
 
-	dRecvLen := 0
-	binary.Read(bytes.NewBuffer(head), binary.LittleEndian, dRecvLen)
+	var rspDataLen uint32
+	headBuf := bytes.NewReader(head)
+	//err = binary.Read(headBuf, binary.LittleEndian, &rspDataLen)
+	err = binary.Read(headBuf, binary.BigEndian, &rspDataLen)
+	if err != nil {
+		fmt.Println("rspDataLen ", err.Error())
+	}
+	//fmt.Printf("====================rspDataLen=%d=========================\n", rspDataLen)
 
-	body := make([]byte, dRecvLen)
-	rTotalLen := 0
-	for rTotalLen < dRecvLen {
-		rLen, err := conn.Read(body[rTotalLen:])
+	body := make([]byte, rspDataLen)
+	var totalLenr uint32 = 0
+	for totalLenr < rspDataLen {
+		lenr, err := conn.Read(body[totalLenr:])
 		if err != nil {
 			fmt.Println("conn Read Body", err.Error())
 			//conn.Close()
-			//return nil, err
-			continue
+			return nil, err
+			//continue
 		}
-		rTotalLen += rLen
+		totalLenr += (uint32)(lenr)
 	}
-	fmt.Println(string(body[0:dRecvLen]))
-	return body, nil
+	//fmt.Printf("====================rspDataLen=%u\tbody=%v\n", rspDataLen, body[0:totalLenr])
+	return body[0:totalLenr], nil
 }
 
 func makeReqData() []byte {
@@ -115,7 +120,7 @@ func tcpTest(wg *sync.WaitGroup, timerStatHelper *stat.StatHelper) {
 				timerStatHelper.AddCount("tcpreqfail")
 				continue
 			}
-			if bytes.Compare(reqData, rspData) == 0 {
+			if bytes.Compare(reqData[4:], rspData) == 0 {
 				timerStatHelper.AddCount("tcpreqsucc")
 				//fmt.Printf("tcp rspData=%s\n", base64.StdEncoding.EncodeToString(rspData))
 			} else {
