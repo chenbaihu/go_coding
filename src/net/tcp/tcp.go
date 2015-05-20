@@ -30,19 +30,24 @@ func createTcpCli(timeout time.Duration, tcpaddr string) (net.Conn, error) {
 }
 
 func tcpSendRecv(conn net.Conn, data []byte, timeout time.Duration) ([]byte, error) {
-	lens, err := conn.Write(data)
-	fmt.Println(lens)
-	if err != nil {
-		fmt.Println("conn Write ", err.Error())
-		conn.Close()
-		return nil, err
+	sTotalLen := dataLen
+	for sTotalLen > 0 {
+		lens, err := conn.Write(data)
+		fmt.Println(lens)
+		if err != nil {
+			fmt.Println("conn Write ", err.Error())
+			//conn.Close()
+			//return nil, err
+			continue
+		}
+		sTotalLen -= lens
 	}
 
 	head := make([]byte, 4)
-	_, err = conn.Read(head)
+	_, err := conn.Read(head)
 	if err != nil {
 		fmt.Println("conn Read Head", err.Error())
-		conn.Close()
+		//conn.Close()
 		return nil, err
 	}
 
@@ -55,8 +60,9 @@ func tcpSendRecv(conn net.Conn, data []byte, timeout time.Duration) ([]byte, err
 		rLen, err := conn.Read(body[rTotalLen:])
 		if err != nil {
 			fmt.Println("conn Read Body", err.Error())
-			conn.Close()
-			return nil, err
+			//conn.Close()
+			//return nil, err
+			continue
 		}
 		rTotalLen += rLen
 	}
