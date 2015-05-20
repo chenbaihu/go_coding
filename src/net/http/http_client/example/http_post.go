@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func createHttpCli(timeout time.Duration) *http.Client {
+func createHttpCli(timeout time.Duration) (*http.Client, error) {
 	//http://www.tuicool.com/articles/rmaYBz
 	var httpCli *http.Client = &http.Client{
 		Transport: &http.Transport{
@@ -32,42 +32,42 @@ func createHttpCli(timeout time.Duration) *http.Client {
 			ResponseHeaderTimeout: timeout,
 		},
 	}
-	return httpCli
+	return httpCli, nil
 }
 
-func createHttpReq(url string, data []byte) (*http.Request, error) {
-	r, err := http.NewRequest("POST", url, bytes.NewReader(data))
+func createHttpReq(url string, reqData []byte) (*http.Request, error) {
+	httpReq, err := http.NewRequest("POST", url, bytes.NewReader(reqData))
 	if err != nil {
 		return nil, err
 	}
 
-	r.Header.Set("Content-Type", "application/octet-stream")
-	r.Header.Set("User-Agent", "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)")
+	httpReq.Header.Set("Content-Type", "application/octet-stream")
+	httpReq.Header.Set("User-Agent", "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)")
 	if keepAlive {
-		r.Header.Set("Connection", "keep-alive")
-		r.Header.Set("keep-alive", "timeout=2000")
+		httpReq.Header.Set("Connection", "keep-alive")
+		httpReq.Header.Set("keep-alive", "timeout=2000")
 	} else {
-		r.Header.Set("Connection", "close")
+		httpReq.Header.Set("Connection", "close")
 	}
-	return r, err
+	return httpReq, nil
 }
 
-func HTTPPost(httpCli *http.Client, httpReq *http.Request) ([]byte, error) {
-	resp, err := httpCli.Do(httpReq)
+func httpSendRecv(httpCli *http.Client, httpReq *http.Request) ([]byte, error) {
+	httpRsp, err := httpCli.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	//defer httpRsp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Invalid HTTP Code: [%v]", resp.StatusCode)
+	if httpRsp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Invalid HTTP Code: [%v]", httpRsp.StatusCode)
 	}
 
-	d, err := ioutil.ReadAll(resp.Body)
+	rspData, err := ioutil.ReadAll(httpRsp.Body)
 	if err != nil {
 		return nil, err
 	}
-	return d, nil
+	return rspData, nil
 }
 
 func makeReqData() []byte {
@@ -87,14 +87,14 @@ func httpPostTest(wg *sync.WaitGroup, timerStatHelper *stat.StatHelper) {
 			break
 		}
 
-		httpCli := createHttpCli(time.Duration(timeoutMs) * time.Millisecond)
+		httpCli, _ := createHttpCli(time.Duration(timeoutMs) * time.Millisecond)
 		httpReq, _ := createHttpReq(url, reqData)
 		for j := 0; j < reqNumPerConn; j++ {
 			atomic.AddInt64(&hasSendNum, 1)
 
 			timerStatHelper.AddCount("httppost")
 			t := time.Now()
-			rspData, err := HTTPPost(httpCli, httpReq)
+			rspData, err := httpSendRecv(httpCli, httpReq)
 			timerStatHelper.AddTimeStat("onetrip", time.Since(t))
 			if err != nil {
 				//fmt.Println("HttpPost faile:", err)
