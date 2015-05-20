@@ -46,6 +46,7 @@ void EchoServer::onMessage(const muduo::net::TcpConnectionPtr& conn,
           conn->send(msg);
       } else {
           LOG_INFO << conn->name() << " echo len=" << len << "\treadAbleBytes=" << buf->readableBytes(); 
+          break;
       }
   }
   //muduo::string msg(buf->retrieveAllAsString());
