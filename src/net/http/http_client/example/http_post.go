@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	//"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -28,15 +29,15 @@ func createHttpCli(timeout time.Duration) (*http.Client, error) {
 				}
 				return c, nil
 			},
-			MaxIdleConnsPerHost:   10,
+			MaxIdleConnsPerHost:   100000, //每个host上的空闲连接数
 			ResponseHeaderTimeout: timeout,
 		},
 	}
 	return httpCli, nil
 }
 
-func createHttpReq(url string, reqData []byte) (*http.Request, error) {
-	httpReq, err := http.NewRequest("POST", url, bytes.NewReader(reqData))
+func createHttpReq(url string) (*http.Request, error) {
+	httpReq, err := http.NewRequest("POST", url, bytes.NewReader([]byte{}))
 	if err != nil {
 		return nil, err
 	}
@@ -52,12 +53,13 @@ func createHttpReq(url string, reqData []byte) (*http.Request, error) {
 	return httpReq, nil
 }
 
-func httpSendRecv(httpCli *http.Client, httpReq *http.Request) ([]byte, error) {
+func httpSendRecv(httpCli *http.Client, httpReq *http.Request, reqData []byte) ([]byte, error) {
+	httpReq.Write(bytes.NewBuffer(reqData))
 	httpRsp, err := httpCli.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
-	//defer httpRsp.Body.Close()
+	defer httpRsp.Body.Close()
 
 	if httpRsp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("Invalid HTTP Code: [%v]", httpRsp.StatusCode)
@@ -80,21 +82,21 @@ func makeReqData() []byte {
 
 func httpPostTest(wg *sync.WaitGroup, timerStatHelper *stat.StatHelper) {
 	defer wg.Done()
-	reqData := makeReqData()
+	httpCli, _ := createHttpCli(time.Duration(timeoutMs) * time.Millisecond)
 	for {
 		if (reqNum != 0) && (atomic.LoadInt64(&hasSendNum) > reqNum) {
 			//finish
 			break
 		}
 
-		httpCli, _ := createHttpCli(time.Duration(timeoutMs) * time.Millisecond)
-		httpReq, _ := createHttpReq(url, reqData)
+		reqData := makeReqData()
+		httpReq, _ := createHttpReq(url)
 		for j := 0; j < reqNumPerConn; j++ {
 			atomic.AddInt64(&hasSendNum, 1)
 
 			timerStatHelper.AddCount("httppost")
 			t := time.Now()
-			rspData, err := httpSendRecv(httpCli, httpReq)
+			rspData, err := httpSendRecv(httpCli, httpReq, reqData)
 			timerStatHelper.AddTimeStat("onetrip", time.Since(t))
 			if err != nil {
 				//fmt.Println("HttpPost faile:", err)
