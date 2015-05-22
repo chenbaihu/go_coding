@@ -15,6 +15,14 @@ func modify_ref(array []int) {
 }
 
 func main() {
+	//
+	var ar []int
+	ar = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	fmt.Printf("ar=%v\n", ar)
+	for k, v := range ar {
+		fmt.Printf("ar[%d]=%d\n", k, v)
+	}
+
 	//1
 	var arr [100]int
 	for i := 0; i < 100; i++ {
