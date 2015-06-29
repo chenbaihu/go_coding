@@ -14,23 +14,27 @@ func show(i interface{}) {
 	switch i.(type) {
 	case *Person:
 
-		t := reflect.TypeOf(i) //得到类型的元数据
-		fmt.Println("reflect.TypeOf t:", t)
+		t1 := reflect.TypeOf(i) //得到类型的元数据
+		fmt.Println("reflect.TypeOf t1=", t1)
 
+		//v := reflect.ValueOf((i).(*Person)) //得到实际的值
 		v := reflect.ValueOf(i) //得到实际的值
-		fmt.Printf("reflect.ValueOf v:%v\n\n\n", v)
+		fmt.Printf("reflect.ValueOf v=%v\n", v)
 
-		//fmt.Println("NumField=", v.NumField())
+		myref := v.Elem()
+		t2 := myref.Type() //得到类型的元数据
+		fmt.Println("reflect.TypeOf t2:", t2)
 
-		//for index := 0; index < v.NumField(); index++ {
-		for index := 0; index < 2; index++ {
-			tag := t.Elem().Field(index).Tag
-			fmt.Println("t.Elem().Field tag:", index, tag)
+		for i := 0; i < myref.NumField(); i++ {
+			fmt.Printf("i=%d\n", i)
+			fields := myref.Field(i).String() // name := v.Elem().Field(0).String()
+			fmt.Printf("i=%d\tfields=%s\n", i, fields)
 
-			filed := v.Elem().Field(index)
-			//filed:= v.Elem().Field(index).String()
-			fmt.Println("v.Elem().Field", index, "\t", filed)
+			field := myref.Field(i) // name := v.Elem().Field(0)
+			//fmt.Printf("%d. %s %s = %v \n", i, t2.Field(i).Name, field.Type(), field.Interface())
+			fmt.Printf("i=%d\tname=%s\ttype=%s\tfields=%s\n", i, t2.Field(i).Name, field.Type(), field.String())
 		}
+
 	}
 }
 
