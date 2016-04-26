@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	_ "net/http/pprof"
 	_ "os"
 	"runtime"
 	"runtime/debug"
@@ -79,6 +80,15 @@ func main() {
 				err, string(debug.Stack()))
 		}
 	}()
+
+	//pprof for debug	
+	go func(){
+         	err := http.ListenAndServe(":9696", nil)
+         	if err != nil {
+	     		fmt.Printf("err=%v\n", err);
+             		//TODO err
+         	}
+     	}()
 
 	// start woker pool
 	for i := 0; i < 5; i++ {
