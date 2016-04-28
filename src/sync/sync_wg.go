@@ -6,6 +6,9 @@ import (
 	"sync"
 )
 
+//带mutex的struct必须是指针receivers
+//如果你定义的struct中带有mutex,那么你的receivers必须是指针
+
 var wg sync.WaitGroup
 
 func getKVFromRedis(keys []string, kvMap map[string]string) bool {
