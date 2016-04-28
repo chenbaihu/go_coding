@@ -54,7 +54,22 @@ func main() {
 	defer client.Close()
 
 	producer, err := sarama.NewSyncProducerFromClient(client)
-	//producer, err := sarama.NewSyncProducer(brokerServers, nil)
+	//config := sarama.NewConfig()
+	//config.Producer.Return.Errors = true
+	//config.Producer.Return.Successes = true
+	//config.Producer.Flush.Messages = *batchNum
+	//config.Producer.Flush.MaxMessages = *batchNum
+	//if *partition != -1 {
+	//	config.Producer.Partitioner = sarama.NewManualPartitioner
+	//}
+	////config.Producer.Compression = 2
+	//if *waitForAll {
+	//	config.Producer.RequiredAcks = sarama.WaitForAll // Wait for all in-sync replicas to ack the message
+	//} else {
+	//	config.Producer.RequiredAcks = sarama.WaitForLocal
+	//}
+	//config.Producer.Retry.Max = 10                   // Retry up to 10 times to produce the message
+	//producer, err := sarama.NewSyncProducer(brokerServers, config)
 	if err != nil {
 		fmt.Printf("failed to create sync producer, err=[%s]\n", err)
 		return
