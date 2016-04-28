@@ -16,7 +16,7 @@ var data []byte = []byte("kafka_high_level_produce_data_testssssssssssssssssssss
 func init() {
 	flag.StringVar(&topic, "topic", "rt_mc", "topic name")
 	flag.StringVar(&broker, "broker", "127.0.0.1:9501,127.0.0.1:9501", "broker list")
-	flag.IntVar(&count, "count", 0, "count of messages")
+	flag.IntVar(&count, "count", 1, "count of messages")
 }
 
 func parseCmdline() error {
@@ -52,6 +52,7 @@ func main() {
 		return
 	}
 	defer client.Close()
+
 	producer, err := sarama.NewSyncProducerFromClient(client)
 	//producer, err := sarama.NewSyncProducer(brokerServers, nil)
 	if err != nil {
@@ -59,10 +60,12 @@ func main() {
 		return
 	}
 	defer producer.Close()
+
 	msg := sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.StringEncoder(data),
 	}
+
 	sendCount := 0
 	min := 1000.0
 	max := 0.0
