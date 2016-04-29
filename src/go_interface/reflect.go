@@ -13,6 +13,9 @@ type Person struct {
 func show(i interface{}) {
 	switch i.(type) {
 	case *Person:
+		//得到实际的值(方法0)
+		v0 := i.(*Person)
+		fmt.Printf("v0=%v\n", v0)
 
 		//得到实际的值(方法1)
 		v1 := reflect.ValueOf((i).(*Person))
